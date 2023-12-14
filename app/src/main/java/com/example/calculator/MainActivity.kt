@@ -1,6 +1,7 @@
 package com.example.calculator
 
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.TextView
 import androidx.activity.ComponentActivity
@@ -9,6 +10,8 @@ import androidx.activity.ComponentActivity
 class MainActivity : ComponentActivity() {
     private lateinit var expressionTextView: TextView
     private lateinit var resultTextView: TextView
+    private lateinit var sqrt: TextView
+    private lateinit var ln: TextView
 
     private var currentExpression = ""
 
@@ -20,17 +23,26 @@ class MainActivity : ComponentActivity() {
 
         expressionTextView = findViewById(R.id.expression)
         resultTextView = findViewById(R.id.result)
-
         setButtonClickListeners()
+        if (isLandSpaced()) {
+            sqrt = findViewById(R.id.button_sqrt)
+            sqrt.setOnClickListener{
+                onButtonClick(findViewById<TextView>(R.id.button_sqrt))
+            }
+
+            ln = findViewById(R.id.button_natural_log)
+            ln.setOnClickListener{
+                onButtonClick(findViewById<TextView>(R.id.button_natural_log))
+            }
+        }
 
         val tmpExpression: String? = savedInstanceState?.getString("expression")
-
-        clearExpression()
-
+        val tmpResult: String? = savedInstanceState?.getString("result")
         if (tmpExpression != null) {
             currentExpression = tmpExpression
             updateExpressionTextView()
         }
+        if (tmpResult != null) resultTextView.text = tmpResult
     }
 
     private fun setButtonClickListeners() {
@@ -47,6 +59,11 @@ class MainActivity : ComponentActivity() {
                 onButtonClick(findViewById<TextView>(buttonId))
             }
         }
+    }
+
+    private fun isLandSpaced(): Boolean {
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) return true
+        return false
     }
 
     private fun onButtonClick(button: TextView) {
@@ -71,6 +88,7 @@ class MainActivity : ComponentActivity() {
         // Очистка текущего выражения
         currentExpression = ""
         updateExpressionTextView()
+        resultTextView.text = ""
     }
 
     private fun backspace() {
@@ -94,6 +112,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("expression", expressionTextView.text.toString())
+        outState.putString("result", resultTextView.text.toString())
         super.onSaveInstanceState(outState)
     }
 
