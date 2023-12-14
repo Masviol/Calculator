@@ -8,20 +8,30 @@ class MathEvaluator {
     fun ConvertExpression(expression: String): String {
         var convertedExpression = StringBuilder()
 
-        if (!expression[0].isDigit()) return "ERROR"
+        if (!expression[0].isDigit() && expression[0] != '(' && expression[0] != '√' && expression[0] != 'l') return "ERROR"
 
         for (index in expression.indices) {
             when {
                 expression[index].isDigit() -> convertedExpression.append(expression[index])
                 expression[index] == 'l' -> convertedExpression.append('l')
-                expression[index] == '√' -> convertedExpression.append('l')
+                expression[index] == '√' -> convertedExpression.append('√')
+                expression[index] == '(' -> convertedExpression.append('(')
+                expression[index] == ')' -> {
+                    if (!expression[index - 1].isDigit() && expression[index - 1] != ')') return "ERROR"
+                    if (expression[index - 1].isDigit()) {
+                        convertedExpression.append('f')
+                        convertedExpression.append(')')
+                    }
+                    if (expression[index - 1] == ')') convertedExpression.append(')')
+                }
                 !expression[index].isDigit() -> {
-                    if (!expression[index - 1].isDigit()) return "ERROR"
+                    if (!expression[index - 1].isDigit() && expression[index - 1] != '(' && expression[index - 1] != ')') return "ERROR"
                     if (expression[index -1].isDigit()) convertedExpression.append('f')
                     convertedExpression.append(expression[index])
                 }
             }
         }
+        convertedExpression.append('f')
 
         return convertedExpression.toString()
     }
@@ -46,7 +56,7 @@ class MathEvaluator {
                     if (stack.isEmpty()) return "ERROR"
                     stack.pop()
                 }
-                "+-*/".contains(symbol) -> {
+                "+-×÷".contains(symbol) -> {
                     while (stack.isNotEmpty() && CheckPriority(stack.peek()) >= CheckPriority(symbol)) {
                         output.append(stack.pop())
 
@@ -66,7 +76,7 @@ class MathEvaluator {
     fun CheckPriority(operator: Char): Int {
         return when (operator) {
             '+', '-' -> 1
-            '*', '/' -> 2
+            '×', '÷' -> 2
             else -> 0
         }
     }
@@ -90,34 +100,44 @@ class MathEvaluator {
                     value.clear()
                 }
 
-                expression[index] == '√' -> values[values.size - 1] = sqrt(values[values.size - 1])
-                expression[index] == 'l' -> values[values.size - 1] = ln(values[values.size - 1])
+                expression[index] == '√' -> {
+                    values[values.size - 1] = sqrt(values[values.size - 1])
+                    result = values[values.size - 1]
+                }
+                expression[index] == 'l' -> {
+                    values[values.size - 1] = ln(values[values.size - 1])
+                    result = values[values.size - 1]
+                }
                 expression[index] == '+' -> {
-                    val tmpValue: Float = values[0] + values[1]
-                    values.clear()
+                    val tmpValue: Float = values[values.size - 2] + values[values.size - 1]
+                    values.removeAt(values.size - 1)
+                    values.removeAt(values.size - 1)
                     values.add(tmpValue)
                     result = tmpValue
                 }
 
                 expression[index] == '-' -> {
-                    val tmpValue = values[0] - values[1]
-                    values.clear()
+                    val tmpValue = values[values.size - 1] - values[values.size - 2]
+                    values.removeAt(values.size - 1)
+                    values.removeAt(values.size - 1)
                     values.add(tmpValue)
                     result = tmpValue
                 }
 
-                expression[index] == '*' -> {
-                    if (values[0] == 0f || values[1] == 0f) return "ERROR"
-                    val tmpValue = values[0] * values[1]
-                    values.clear()
+                expression[index] == '×' -> {
+                    if (values[values.size - 2] == 0f || values[values.size - 1] == 0f) return "ERROR"
+                    val tmpValue = values[values.size - 2] * values[values.size - 1]
+                    values.removeAt(values.size - 1)
+                    values.removeAt(values.size - 1)
                     values.add(tmpValue)
                     result = tmpValue
                 }
 
-                expression[index] == '/' -> {
-                    if (values[0] == 0f || values[1] == 0f) return "ERROR"
-                    val tmpValue = values[0] / values[1]
-                    values.clear()
+                expression[index] == '÷' -> {
+                    if (values[values.size - 2] == 0f || values[values.size - 1] == 0f) return "ERROR"
+                    val tmpValue = values[values.size - 2] / values[values.size - 1]
+                    values.removeAt(values.size - 1)
+                    values.removeAt(values.size - 1)
                     values.add(tmpValue)
                     result = tmpValue
                 }
